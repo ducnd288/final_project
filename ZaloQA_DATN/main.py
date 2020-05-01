@@ -15,15 +15,15 @@ init_logger()
 logger = logging.getLogger(__name__)
 
 config = {}
-config['batch_size'] = 16
-config['epochs'] = 5
+config['batch_size'] = 100
+config['epochs'] = 2
 config['lr'] = 1e-5
-config['accumulated'] = 5
-fine_tuning = True
+config['accumulated'] = 2
+fine_tuning = False
 
 
 zalo = ZaloDatasetProcessor()
-zalo.load_from_path(dataset_path='dataset', train_filename='train_dev.json', test_filename='test.json', dev_filename='dev.json')
+zalo.load_from_path(dataset_path='dataset', train_filename='combine.json', test_filename='test.json', dev_filename='dev.json')
 tokenizer = BertTokenizer.from_pretrained('bert-base-multilingual-cased')
 features_train = zalo.convert_examples_to_features(zalo.train_data, zalo.label_list, 256, tokenizer)
 features_test = zalo.convert_examples_to_features(zalo.test_data, zalo.label_list, 256, tokenizer)

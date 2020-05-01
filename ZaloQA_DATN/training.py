@@ -30,7 +30,7 @@ class Training:
         self.best_sc = 0
         self.features_train = features_train
         self.features_test = features_test
-        self.model = model
+        self.model = nn.DataParallel(model)
         self.logger = logger
         self.epoches = config['epochs']
         self.batch_size = config['batch_size']
@@ -40,7 +40,7 @@ class Training:
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.lr = config['lr']
 
-        self.loss_c = nn.MSELoss() if self.model.num_classes == 1 else nn.CrossEntropyLoss()
+        self.loss_c = nn.CrossEntropyLoss()
 
     def prepare_dataset_for_train_valid(self):
         input_ids = [feature.input_ids for feature in self.features_train]
@@ -104,7 +104,7 @@ class Training:
         self.model.train()
         optimizer.zero_grad()
 
-        tsfm = self.model.bert
+        tsfm = self.model.module.bert
 
         for child in tsfm.children():
             for param in child.parameters():
@@ -130,7 +130,7 @@ class Training:
                 intent_label = yb_train.to(self.device)
 
                 logits = self.model(input_ids, input_mask, segment_ids)
-                loss_s = self.loss_c(logits.view(-1, self.model.num_classes), intent_label.view(-1))
+                loss_s = self.loss_c(logits.view(-1, 2), intent_label.view(-1))
                 loss_s = loss_s.mean()
                 loss_s.backward()
 
@@ -189,6 +189,6 @@ class Training:
         if show_confusion_matrix:
             y_true = pd.Series(all_labels, name="Actual")
             y_pred = pd.Series(all_preds, name="Predicted")
-            df_confusion = pd.crosstab(y_true, y_pred, )
+            df_confusion = pd.crosstab(y_true, y_pred)
             df_confusion.to_csv('Maxtrix.csv')
 
